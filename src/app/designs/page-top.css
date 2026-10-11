@@ -1,0 +1,60 @@
+:host { display: block; font: 13px/1.35 var(--ub-font); color: var(--ub-text); }
+
+.frame { border: 1px solid var(--ub-line); border-radius: 12px; overflow: hidden; background: var(--ub-surface); box-shadow: var(--ub-shadow); }
+.chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: color-mix(in oklab, var(--ub-line) 55%, var(--ub-surface)); }
+.chrome i { width: 9px; height: 9px; border-radius: 50%; background: var(--ub-track); }
+.addr {
+  flex: 1;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ub-surface);
+  color: var(--ub-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The bar sits on top of the page, out of the flow, so nothing below it moves when it shows up. */
+.view { position: relative; }
+.bar { position: absolute; inset: 0 0 auto; height: 3px; overflow: hidden; }
+.fill, .sliver { position: absolute; inset: 0; background: var(--ub-fill); }
+.fill {
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  transition: transform 0.25s ease-out;
+  box-shadow: 0 0 8px var(--ub-glow);
+}
+:host([data-phase='idle']) .fill, :host([data-phase='cancelled']) .fill { opacity: 0; transition: none; }
+:host([data-phase='done']) .fill { background: var(--ub-ok); }
+:host([data-phase='failed']) .fill { background: var(--ub-bad); }
+
+/* Processing: the fill gives way to a sliver that slides across, again and again. */
+.sliver { display: none; right: auto; width: 35%; }
+:host([data-phase='processing']) .fill { opacity: 0; transition: none; }
+:host([data-phase='processing']) .sliver { display: block; animation: slide 1.1s ease-in-out infinite; }
+@keyframes slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+.page { display: grid; gap: 9px; padding: 20px 16px 14px; }
+.line { height: 8px; border-radius: 4px; background: var(--ub-line); }
+.w60 { width: 60%; }
+.w85 { width: 85%; }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; margin-top: 4px; }
+.chip { font-weight: 600; font-variant-numeric: tabular-nums; }
+:host([data-phase='done']) .chip { color: var(--ub-ok); }
+:host([data-phase='failed']) .chip { color: var(--ub-bad); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fill { transition: none; }
+  /* A static, dashed full-width line instead of the sliding sliver. */
+  :host([data-phase='processing']) .sliver {
+    animation: none;
+    width: auto;
+    right: 0;
+    background: repeating-linear-gradient(90deg, var(--ub-accent) 0 10px, transparent 10px 16px);
+  }
+}

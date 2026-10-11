@@ -5,8 +5,8 @@ still working"**.
 
 With `withXhr()`, Angular's `HttpClient` reports `UploadProgress` events, and the
 last one says 100% as soon as the last byte has left the browser. The server may
-need seconds more before it answers. This demo builds an upload bar with three
-states and measures the gap:
+need seconds more before it answers. This demo keeps one upload state with three
+phases, measures the gap, and draws it seven ways:
 
 - **sending**: a real percentage, from `loaded / total`
 - **processing**: no `value` attribute on the `<progress>` (so it is
@@ -14,9 +14,41 @@ states and measures the gap:
   response
 - **done** or **failed**, when the response or the error arrives
 
-The bar is the native `<progress>` element, styled with `appearance: none`, the
-vendor pseudo-elements, `light-dark()` colours and a `prefers-reduced-motion`
-rule. The component is `src/app/upload-bar.ts` (with `.html` and `.css`).
+The state is `src/app/upload-state.ts`: a `phase` signal, a `percent` signal and
+the upload code. Every design is a presentation-only component that takes `phase`
+and `percent` as signal inputs.
+
+The classic bar (design 0, `src/app/upload-bar.ts` with `.html` and `.css`) is the
+native `<progress>` element, styled with `appearance: none`, the vendor
+pseudo-elements, `light-dark()` colours and a `prefers-reduced-motion` rule.
+
+## The six designs
+
+The default page shows the classic bar and the six designs below it, all driven
+by the one Upload button (or the button design itself). They are a gallery for the
+post, not a library. Each is in `src/app/designs/`.
+
+| design | progressbar element | sending | processing | reduced motion, processing |
+| --- | --- | --- | --- | --- |
+| file card (`file-card.ts`) | native `<progress>` | gradient fill with a light sweeping over it | a band of colour travelling along the track | a static dashed line |
+| ring (`ring.ts`) | `div role="progressbar"` (a ring is a shape `<progress>` can't take) | SVG arc, `pathLength="100"`, the number in the middle | a quarter arc spinning, no number | a dotted full ring |
+| segmented (`segmented.ts`) | native `<progress>` cut into 20 pills by a CSS mask | segments fill left to right | all lit, a wave of brightness running across | every other segment lit |
+| button (`button-bar.ts`) | `div role="progressbar"` behind the button, the same size | the button fills, "Uploading 64%" | full, the gradient drifting, "Processing…" | full with a dashed inner edge |
+| page-top (`page-top.ts`) | `div role="progressbar"`, 3px, pinned to the top of a faux browser frame | `transform: scaleX()` | a sliver sliding across | a static dashed line |
+| stepper (`stepper.ts`) | `div role="progressbar"` around the three stages | the first line fills with the percentage | the middle node pulses | the middle node gets a dashed ring |
+
+Every design shows idle, sending (a real percentage), processing (no number),
+done, failed (red, with the words "Upload failed") and cancelled, and has its own
+keyboard-reachable Cancel. `aria-valuetext` reads `Uploading 45%`, `Processing`,
+`Done`, `Upload failed`. With `prefers-reduced-motion: reduce` no infinite animation
+runs. The colours are `light-dark()` tokens in `src/styles.css` (`--ub-*`), tints
+are `color-mix()`. Text pairs are at least 4.5:1 and every bar against its track
+at least 3:1 in both themes (the lowest is the dark accent on the dark track,
+3.47:1).
+
+Query parameters: `?delay=2000&kbps=0&fail=0` for the server, `?preview=processing`
+(or `sending&percent=64`, `done`, `failed`) freezes the state without uploading,
+`?only=ring` shows one design.
 
 ## What it proves
 
@@ -36,6 +68,23 @@ then waits `delay` ms (2,000 by default) before it answers.
 | cancel while processing | unsubscribing aborts the XHR; the server sees its response closed after it had every byte and before it answered; no `Response` event reaches the page |
 | cancel while sending | the server sees the request closed with fewer bytes than its `Content-Length` |
 
+`tests/designs.spec.ts`, once per design
+
+| test | what it asserts |
+| --- | --- |
+| one progressbar | exactly one element with the progressbar role (by Playwright's role query and by `progress, [role=progressbar]`) |
+| state order | `idle`, `sending`, `processing`, `done`; `aria-valuetext` is `Uploading N%` while sending, `Processing`, then `Done`; one request reached the server. The button design starts the upload from its own button |
+| failure | a 500 ends in `failed`, `aria-valuetext` `Upload failed`, and the words "Upload failed" are on screen |
+| cancel | the design's own Cancel, focused and pressed with Enter, aborts the request (the server sees it close while processing) and the design shows `Cancelled` |
+| reduced motion | in the processing state the design runs at least one infinite animation; with `reducedMotion: 'reduce'` it runs none (`document.getAnimations()`), `aria-valuetext` still says `Processing`, two element screenshots 300 ms apart match, and the bar doesn't look like a full sending bar |
+
+plus two more:
+
+| test | what it asserts |
+| --- | --- |
+| the shimmer `getAnimations()` can't see | the file card's shimmer is a CSS animation on `::-webkit-progress-value` / `::-moz-progress-bar`. It moves (screenshots differ) while `document.getAnimations()` is empty, in all three engines. With reduced motion the screenshots match |
+| button focus | the button design keeps keyboard focus through the upload (`aria-disabled`, not `disabled`), and a second Enter while it's busy sends nothing |
+
 `tests/styling.spec.ts`
 
 | test | what it asserts |
@@ -52,9 +101,10 @@ then waits `delay` ms (2,000 by default) before it answers.
 ```
 npm install
 npx playwright install chromium firefox webkit
-npm run check        # builds, starts the server on :4370, runs the 13 tests in 3 engines
+npm run check        # builds, starts the server on :4370, runs the 45 tests in 3 engines
 npm start            # http://localhost:4370 (?delay=2000&kbps=0&fail=0)
 npm run measure      # one 5 MB upload per engine, prints the gap and the render counts
+npm run measure:designs  # CSS bytes, renders and frame timing per design
 ```
 
 `http://localhost:4370/?gallery` shows one bar per state, a `div role="progressbar"`
@@ -66,19 +116,21 @@ Other probes (each starts its own server; run `npm run build` first):
 node scripts/measure.mjs 10 4000   # 10 MB, the server reads at 4,000 KB/s
 node scripts/probe-shots.mjs       # unstyled and appearance:none <progress> with no value
 node scripts/gallery-shots.mjs     # screenshots/gallery-<engine>-<light|dark>.png
+node scripts/design-shots.mjs      # screenshots/designs-<engine>-<light|dark>-<phase>.png, 2x
+node scripts/design-shots.mjs --reduced   # screenshots/designs-<engine>-reduced-processing.png
 node scripts/a11y-probe.mjs        # the accessibility tree for the gallery
 ```
 
 `npm run check` output (2026-10-11):
 
 ```
-Running 39 tests using 1 worker
+Running 135 tests using 1 worker
   ...
-chromium: last UploadProgress -> Response = 1903 ms
-firefox: last UploadProgress -> Response = 1986 ms
-webkit: last UploadProgress -> Response = 2013 ms
+chromium: last UploadProgress -> Response = 1902 ms
+firefox: last UploadProgress -> Response = 1994 ms
+webkit: last UploadProgress -> Response = 2007 ms
   ...
-  39 passed (1.1m)
+  135 passed (3.8m)
 ```
 
 `npm run measure` output (2026-10-11):
@@ -106,6 +158,96 @@ webkit 27.2  5 MB
   phases: idle -> sending -> processing -> done
   renders during the upload: 5
 ```
+
+## What building the six designs showed
+
+`npm run measure:designs` output (2026-10-11), 10 MB with the server reading at
+2,560 KB/s (about four seconds of sending) and then working for 2 s, one design
+on the page at a time (`?only=`; `none` is the page with no design at all):
+
+```
+CSS per design (source bytes / gzipped):
+  file-card   4481 / 1348
+  ring        2340 / 922
+  segmented   2778 / 1043
+  button      2279 / 998
+  page-top    2612 / 1064
+  stepper     2674 / 1019
+
+chromium 156.0.8078.4: 10 MB at 2,560 KB/s, then 2 s of server work
+  none       events  44  renders   3 (2 while sending)  frames 437, over 25 ms: 0, longest 16.8 ms
+  file-card  events  38  renders  40 (39 while sending)  frames 434, over 25 ms: 0, longest 16.8 ms
+  ring       events  38  renders  40 (39 while sending)  frames 434, over 25 ms: 0, longest 16.8 ms
+  segmented  events  44  renders  46 (45 while sending)  frames 434, over 25 ms: 0, longest 16.8 ms
+  button     events  38  renders  40 (39 while sending)  frames 435, over 25 ms: 0, longest 16.8 ms
+  page-top   events  44  renders  46 (45 while sending)  frames 435, over 25 ms: 0, longest 16.8 ms
+  stepper    events  38  renders  40 (39 while sending)  frames 433, over 25 ms: 0, longest 16.8 ms
+
+firefox 157.0: 10 MB at 2,560 KB/s, then 2 s of server work
+  none       events  74  renders   3 (2 while sending)
+  file-card  events  37  renders  39 (38 while sending)
+  ring       events  37  renders  39 (38 while sending)
+  segmented  events  37  renders  39 (38 while sending)
+  button     events  37  renders  39 (38 while sending)
+  page-top   events  37  renders  39 (38 while sending)
+  stepper    events  37  renders  39 (38 while sending)
+
+webkit 27.2: 10 MB at 2,560 KB/s, then 2 s of server work
+  none       events 161  renders   3 (2 while sending)
+  file-card  events 161  renders  51 (50 while sending)
+  ring       events 161  renders  50 (49 while sending)
+  segmented  events 161  renders  49 (48 while sending)
+  button     events 161  renders  51 (50 while sending)
+  page-top   events 161  renders  50 (49 while sending)
+  stepper    events 161  renders  49 (48 while sending)
+
+file card shimmer while sending (preview at 64%):
+  chromium  moves: true  getAnimations(): []
+  firefox   moves: true  getAnimations(): []
+  webkit    moves: true  getAnimations(): []
+```
+
+- **Renders follow the events, not the design.** In Chromium and Firefox every
+  design re-rendered once per progress event, plus two. WebKit fired 161 events
+  and every design rendered 49 to 51 times. The page with no design reads
+  `percent` nowhere and rendered three times. The frame timing is Chromium only (headless,
+  `requestAnimationFrame` deltas): no frame over 25 ms for any design.
+- **The segmented bar's mask works in all three engines, but WebKit rounds the
+  tile.** One `<progress>`, `mask` with three gradient layers per 5%-wide tile.
+  Chromium and Firefox drew 20 pills. WebKit showed a cut-off 21st pill at the
+  end, with `mask-repeat: repeat-x` and with `round`, which looks like the
+  fractional tile width being rounded down. With
+  `width: round(down, 100%, 20px)` a tile is always a whole number of pixels, and
+  WebKit draws 20.
+- **`color-mix(in oklch, <grey>, white)` turns pink in Chromium.** Mixing
+  `#e2e8f0` 55% with `#ffffff` in `oklch`: Chromium 156 computes
+  `oklch(0.9608 0.0069 none)`, a hue of `none` that paints as `rgb(246,240,242)`.
+  Firefox and WebKit keep the grey's hue (255.5) and paint `rgb(239,242,247)`.
+  Mixing neutrals `in oklab` gives `rgb(239,242,247)` in all three; the demo uses
+  `oklab` for the browser frame and `oklch` only where an accent is involved.
+- **A focused button that gets `disabled` drops focus to `<body>`**, in all three
+  engines; the next Tab starts again from the top of the page (WebKit's stayed on
+  `<body>`). The button design uses `aria-disabled="true"` and ignores clicks
+  while busy, so focus stays on it.
+- **A progressbar inside a button changes the button's name.** In Chromium's
+  accessibility tree, `<button>Upload <span role="progressbar" aria-valuenow="40">`
+  is a button named "Upload 40" with the progressbar as a child. The button design
+  keeps the progressbar outside, behind the button, the same size.
+- **Text over a half-filled button needs two copies.** The label sits half over
+  the fill and half over the track, and no single colour reads on both. The
+  button draws the label twice: accent (or plain text in dark mode) underneath,
+  the on-fill colour on top, clipped with `clip-path: inset()` to the filled part.
+- **`getAnimations()` doesn't see animations on `::-webkit-progress-value` or
+  `::-moz-progress-bar`.** The file card's shimmer runs there and moves in all
+  three engines, but `document.getAnimations()` is empty. The reduced-motion check
+  for it is a pixel check.
+- **An outline on a parent hides under a positioned child.** The first
+  reduced-motion look for the button put a dashed `outline` on the progressbar
+  element; its absolutely positioned fill painted over it in Chromium and Firefox,
+  so nothing showed. The outline is on the fill now.
+- The ring needed nothing special: `pathLength="100"` on the circle makes
+  `stroke-dashoffset` a percentage in all three engines, and the processing spin
+  turns the whole `<svg>`, an HTML-level box, around its own centre.
 
 ## Versions
 

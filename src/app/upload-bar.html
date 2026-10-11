@@ -1,14 +1,4 @@
-<div class="upload" [attr.data-phase]="phase()">
-  <div class="controls">
-    <input #picker type="file" aria-label="File to upload" [disabled]="busy()" />
-    <button type="button" class="send" [disabled]="busy()" (click)="picker.files?.[0] && send(picker.files[0])">
-      Upload
-    </button>
-    @if (busy()) {
-      <button type="button" class="cancel" (click)="cancel()">Cancel</button>
-    }
-  </div>
-
+<div class="bar" [attr.data-phase]="phase()">
   <div class="status" aria-hidden="true">
     <span class="label">
       @if (phase() === 'done') {
@@ -21,7 +11,4 @@
   </div>
 
   <progress max="100" aria-label="Upload" [attr.value]="value()" [attr.aria-valuetext]="text()"></progress>
-
-  <!-- Announces phase changes only; a screen reader reading every percent is noise. -->
-  <p class="sr-only" aria-live="polite">{{ phase() === 'sending' ? 'Uploading' : phase() === 'idle' ? '' : text() }}</p>
 </div>

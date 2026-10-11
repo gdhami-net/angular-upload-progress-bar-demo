@@ -1,0 +1,51 @@
+:host { display: block; font: 13px/1.35 var(--ub-font); color: var(--ub-text); }
+
+.steps { display: flex; align-items: flex-start; padding: 0 28px; }
+
+/* One fixed 30px column: the captions are wider than the dots and overflow both sides evenly. */
+.node { display: grid; grid-template-columns: 30px; justify-items: center; gap: 8px; }
+.dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid var(--ub-track);
+  background: var(--ub-surface);
+  color: var(--ub-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dot svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.cap { color: var(--ub-muted); white-space: nowrap; }
+
+[data-step='active'] .dot { border-color: var(--ub-accent); color: var(--ub-accent); }
+[data-step='active'] .cap { color: var(--ub-text); font-weight: 600; }
+[data-step='complete'] .dot { border-color: transparent; background: var(--ub-accent); color: var(--ub-on-accent); }
+:host([data-phase='done']) [data-step='complete'] .dot { background: var(--ub-ok); }
+[data-step='failed'] .dot { border-color: transparent; background: var(--ub-bad); color: var(--ub-on-accent); }
+[data-step='failed'] .cap { color: var(--ub-bad); font-weight: 600; }
+
+/* The joining lines sit at the dots' middle: 15px down, 3px thick. */
+.line { position: relative; flex: 1; height: 3px; margin: 13.5px 6px 0; border-radius: 2px; background: var(--ub-track); overflow: hidden; }
+.fill { position: absolute; inset: 0; background: var(--ub-fill); transform: scaleX(var(--p, 0)); transform-origin: left; transition: transform 0.25s ease-out; }
+:host([data-phase='done']) .fill { background: var(--ub-ok); }
+
+/* Processing: the active node breathes. */
+:host([data-phase='processing']) [data-step='active'] .dot { animation: pulse 1.4s ease-out infinite; }
+@keyframes pulse {
+  from { box-shadow: 0 0 0 0 var(--ub-glow); }
+  to { box-shadow: 0 0 0 10px transparent; }
+}
+
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; margin-top: 16px; }
+.state { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+:host([data-phase='done']) .state { color: var(--ub-ok); }
+:host([data-phase='failed']) .state { color: var(--ub-bad); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fill { transition: none; }
+  /* Without the pulse, the active node gets a dashed ring and a tinted middle. */
+  :host([data-phase='processing']) [data-step='active'] .dot { animation: none; border-style: dashed; background: var(--ub-tint); }
+}

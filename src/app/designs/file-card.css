@@ -1,0 +1,114 @@
+:host {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 32px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 14px 14px 16px;
+  background: var(--ub-surface);
+  border: 1px solid var(--ub-line);
+  border-radius: 14px;
+  box-shadow: var(--ub-shadow);
+  font: 14px/1.35 var(--ub-font);
+  color: var(--ub-text);
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--ub-tint);
+  color: var(--ub-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+:host([data-phase='done']) .tile { color: var(--ub-ok); background: color-mix(in oklch, var(--ub-ok) 14%, var(--ub-surface)); }
+:host([data-phase='failed']) .tile { color: var(--ub-bad); background: color-mix(in oklch, var(--ub-bad) 12%, var(--ub-surface)); }
+
+.main { min-width: 0; }
+.bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.name { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.state { flex: none; color: var(--ub-muted); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+:host([data-phase='done']) .state { color: var(--ub-ok); }
+:host([data-phase='failed']) .state { color: var(--ub-bad); font-weight: 600; }
+.size { color: var(--ub-muted); font-size: 12.5px; }
+
+progress {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin: 8px 0 6px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--ub-track);
+}
+progress::-webkit-progress-bar { background: var(--ub-track); }
+
+/* The fill: the gradient, with a soft light sweeping over it while bytes go out. */
+progress::-webkit-progress-value {
+  background: linear-gradient(100deg, transparent 35%, rgb(255 255 255 / 0.5) 50%, transparent 65%) no-repeat, var(--ub-fill);
+  background-size: 200% 100%, 100% 100%;
+  border-radius: 999px;
+  transition: inline-size 0.2s ease-out;
+  animation: shimmer 1.8s linear infinite;
+}
+progress::-moz-progress-bar {
+  background: linear-gradient(100deg, transparent 35%, rgb(255 255 255 / 0.5) 50%, transparent 65%) no-repeat, var(--ub-fill);
+  background-size: 200% 100%, 100% 100%;
+  border-radius: 999px;
+  animation: shimmer 1.8s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 150% 0, 0 0; }
+  to { background-position: -50% 0, 0 0; }
+}
+
+:host([data-phase='done']) progress::-webkit-progress-value { background: var(--ub-ok); animation: none; }
+:host([data-phase='done']) progress::-moz-progress-bar { background: var(--ub-ok); animation: none; }
+:host([data-phase='failed']) progress::-webkit-progress-value { background: var(--ub-bad); animation: none; }
+:host([data-phase='failed']) progress::-moz-progress-bar { background: var(--ub-bad); animation: none; }
+
+/* Processing: no value attribute. A band of colour travels along the whole track. */
+progress:indeterminate {
+  background: linear-gradient(90deg, var(--ub-tint) 0 30%, var(--ub-accent) 50%, var(--ub-tint) 70% 100%);
+  background-size: 250% 100%;
+  animation: sweep 1.4s ease-in-out infinite;
+}
+progress:indeterminate::-webkit-progress-bar { background: transparent; }
+progress:indeterminate::-moz-progress-bar { background: transparent; }
+@keyframes sweep {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+.slot { display: grid; place-items: center; width: 32px; height: 32px; }
+.x {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ub-muted);
+  cursor: pointer;
+}
+.x:hover { background: var(--ub-tint); color: var(--ub-text); }
+.x svg, .badge { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.badge { width: 22px; height: 22px; padding: 3px; border-radius: 999px; box-sizing: border-box; stroke-width: 2; }
+.badge.ok { color: var(--ub-on-accent); background: var(--ub-ok); }
+.badge.bad { color: var(--ub-on-accent); background: var(--ub-bad); }
+
+@media (prefers-reduced-motion: reduce) {
+  progress::-webkit-progress-value { animation: none; transition: none; }
+  progress::-moz-progress-bar { animation: none; }
+  /* Still clearly not a percentage: a static dashed line across the whole track. */
+  progress:indeterminate {
+    animation: none;
+    background: repeating-linear-gradient(90deg, var(--ub-accent) 0 10px, var(--ub-track) 10px 16px);
+  }
+}

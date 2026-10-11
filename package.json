@@ -6,7 +6,8 @@
     "start": "npm run build && node server/server.mjs",
     "build": "ng build",
     "check": "playwright test",
-    "measure": "npm run build && node scripts/measure.mjs"
+    "measure": "npm run build && node scripts/measure.mjs",
+    "measure:designs": "npm run build && node scripts/measure-designs.mjs"
   },
   "private": true,
   "packageManager": "npm@11.13.0",
@@ -29,6 +30,6 @@
     "prettier": "^3.8.1",
     "typescript": "~6.0.2"
   },
-  "description": "An Angular 22 upload bar with three states: sending (a real percentage), processing (from the last byte until the server answers), and done or failed.",
+  "description": "An Angular 22 upload state with sending (a real percentage), processing (from the last byte until the server answers), and done or failed, drawn by seven progress bar designs.",
   "license": "MIT"
 }

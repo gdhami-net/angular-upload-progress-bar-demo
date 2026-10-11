@@ -1,0 +1,60 @@
+:host { display: block; font: 14px/1.35 var(--ub-font); color: var(--ub-text); }
+
+.head { width: round(down, 100%, 20px); display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 30px; margin-bottom: 10px; }
+.state { font-weight: 600; font-variant-numeric: tabular-nums; }
+:host([data-phase='done']) .state { color: var(--ub-ok); }
+:host([data-phase='failed']) .state { color: var(--ub-bad); }
+
+/*
+ * One <progress>, cut into 20 pills by a mask. Each mask tile is 5% of the width and
+ * holds one pill: a rectangle plus a round cap at each end, 4px of gap after it.
+ */
+progress {
+  --h: 8px;
+  --r: 4px;
+  --gap: 4px;
+  appearance: none;
+  display: block;
+  /* A whole multiple of 20px, so each 5% mask tile is a whole number of pixels (see below). */
+  width: round(down, 100%, 20px);
+  height: var(--h);
+  border: 0;
+  background: var(--ub-track);
+  mask:
+    radial-gradient(circle at var(--r) 50%, #000 calc(var(--r) - 0.5px), transparent var(--r)),
+    radial-gradient(circle at calc(100% - var(--gap) - var(--r)) 50%, #000 calc(var(--r) - 0.5px), transparent var(--r)),
+    linear-gradient(90deg, transparent var(--r), #000 var(--r) calc(100% - var(--gap) - var(--r)), transparent 0);
+  mask-size: 5% 100%;
+  /* With a fractional tile width, WebKit showed a cut-off 21st pill; the round() width above fixes it. */
+  mask-repeat: repeat-x;
+}
+progress::-webkit-progress-bar { background: var(--ub-track); }
+progress::-webkit-progress-value { background: var(--ub-fill); }
+progress::-moz-progress-bar { background: var(--ub-fill); }
+
+:host([data-phase='done']) progress::-webkit-progress-value { background: var(--ub-ok); }
+:host([data-phase='done']) progress::-moz-progress-bar { background: var(--ub-ok); }
+:host([data-phase='failed']) progress::-webkit-progress-value { background: var(--ub-bad); }
+:host([data-phase='failed']) progress::-moz-progress-bar { background: var(--ub-bad); }
+
+/* Processing: every segment lit, with a wave of brightness running across them. */
+progress:indeterminate {
+  background:
+    linear-gradient(90deg, transparent 0 35%, color-mix(in oklch, var(--ub-accent) 30%, white) 50%, transparent 65% 100%) 0 0 / 250% 100% no-repeat,
+    var(--ub-accent);
+  animation: wave 1.5s linear infinite;
+}
+progress:indeterminate::-webkit-progress-bar { background: transparent; }
+progress:indeterminate::-moz-progress-bar { background: transparent; }
+@keyframes wave {
+  from { background-position: 100% 0, 0 0; }
+  to { background-position: 0 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Every other segment lit: a pattern no percentage ever makes. */
+  progress:indeterminate {
+    animation: none;
+    background: repeating-linear-gradient(90deg, var(--ub-accent) 0 5%, var(--ub-track) 5% 10%);
+  }
+}

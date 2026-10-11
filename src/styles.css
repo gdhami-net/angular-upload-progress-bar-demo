@@ -1,2 +1,39 @@
-:root { color-scheme: light dark; }
-body { margin: 0; background: Canvas; color: CanvasText; }
+:root {
+  color-scheme: light dark;
+
+  /* Shared by the six designs. Every pair used for text passes 4.5:1, every bar against its track 3:1. */
+  --ub-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ub-page: light-dark(#f1f5f9, #020617);
+  --ub-surface: light-dark(#ffffff, #0f172a);
+  --ub-line: light-dark(#e2e8f0, #1e293b);
+  --ub-text: light-dark(#0f172a, #e2e8f0);
+  --ub-muted: light-dark(#475569, #94a3b8);
+  --ub-track: light-dark(#e2e8f0, #334155);
+  --ub-accent: light-dark(#4f46e5, #818cf8);
+  --ub-accent-2: light-dark(#7c3aed, #c4b5fd);
+  --ub-on-accent: light-dark(#ffffff, #0f172a);
+  --ub-ok: light-dark(#15803d, #4ade80);
+  --ub-bad: light-dark(#b91c1c, #f87171);
+  --ub-tint: color-mix(in oklch, var(--ub-accent) 14%, var(--ub-surface));
+  --ub-glow: color-mix(in oklch, var(--ub-accent) 35%, transparent);
+  --ub-shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px -6px rgb(15 23 42 / 0.12);
+  --ub-fill: linear-gradient(90deg, var(--ub-accent), var(--ub-accent-2));
+}
+
+body { margin: 0; background: var(--ub-page); color: var(--ub-text); font-family: var(--ub-font); }
+
+:focus-visible { outline: 2px solid var(--ub-accent); outline-offset: 2px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* The small cancel link several designs share. */
+.d-cancel {
+  font: 500 13px/1 var(--ub-font);
+  color: var(--ub-muted);
+  background: none;
+  border: 1px solid var(--ub-line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.d-cancel:hover { color: var(--ub-text); border-color: var(--ub-muted); }

@@ -1,0 +1,25 @@
+main { max-width: 760px; margin: 40px auto 64px; padding: 0 16px; }
+h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.01em; }
+.lede { margin: 0 0 28px; color: var(--ub-muted); }
+
+.upload { padding: 20px; margin-bottom: 28px; background: var(--ub-surface); border: 1px solid var(--ub-line); border-radius: 14px; }
+.controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+
+.designs { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+figure {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  margin: 0;
+  padding: 18px 20px 22px;
+  background: var(--ub-surface);
+  border: 1px solid var(--ub-line);
+  border-radius: 16px;
+}
+figcaption { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ub-muted); }
+/* The file card and the browser frame bring their own surface; let them sit flat on the figure. */
+figure app-file-card, figure app-page-top .frame { box-shadow: none; }
+
+.gallery { display: grid; gap: 28px; }
+.custom { height: 10px; border-radius: 999px; overflow: hidden; background: #e2e8f0; }
+.custom-fill { height: 100%; background: #0284c7; }

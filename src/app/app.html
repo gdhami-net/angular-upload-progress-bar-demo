@@ -1,0 +1,73 @@
+<main>
+  @if (gallery) {
+    <h1>Upload progress bar</h1>
+    <section class="gallery">
+      @for (s of states; track s) {
+        <app-upload-bar [phase]="s" [percent]="64" />
+      }
+      <div class="custom" role="progressbar" aria-label="Upload" aria-valuemin="0" aria-valuemax="100"
+           aria-valuenow="64" aria-valuetext="Uploading 64%"><div class="custom-fill" style="width: 64%"></div></div>
+      <!-- A property binding to null: the DOM turns it into value="0", so the bar is NOT indeterminate. -->
+      <progress id="property-null" max="100" [value]="nothing"></progress>
+    </section>
+  } @else {
+    <h1>Upload progress bars</h1>
+    <p class="lede">One upload state, read by seven designs. 100% means the file is sent; the server answers later.</p>
+
+    <section class="upload" [attr.data-phase]="state.phase()">
+      <div class="controls">
+        <input #picker type="file" aria-label="File to upload" [disabled]="state.busy()" />
+        <button type="button" class="send" [disabled]="state.busy()" (click)="start(picker)">Upload</button>
+        @if (state.busy()) {
+          <button type="button" class="cancel" (click)="state.cancel()">Cancel</button>
+        }
+      </div>
+      @if (show('classic')) {
+        <app-upload-bar [phase]="state.phase()" [percent]="state.percent()" />
+      }
+    </section>
+
+    <section class="designs">
+      @if (show('file-card')) {
+        <figure>
+          <figcaption>File card</figcaption>
+          <app-file-card [phase]="state.phase()" [percent]="state.percent()" [name]="fileName()" [size]="fileSize()"
+                         (cancel)="state.cancel()" />
+        </figure>
+      }
+      @if (show('ring')) {
+        <figure>
+          <figcaption>Ring</figcaption>
+          <app-ring [phase]="state.phase()" [percent]="state.percent()" (cancel)="state.cancel()" />
+        </figure>
+      }
+      @if (show('segmented')) {
+        <figure>
+          <figcaption>Segmented</figcaption>
+          <app-segmented [phase]="state.phase()" [percent]="state.percent()" (cancel)="state.cancel()" />
+        </figure>
+      }
+      @if (show('button')) {
+        <figure>
+          <figcaption>Button that becomes the bar</figcaption>
+          <app-button-bar [phase]="state.phase()" [percent]="state.percent()" (start)="start(picker)"
+                          (cancel)="state.cancel()" />
+        </figure>
+      }
+      @if (show('page-top')) {
+        <figure>
+          <figcaption>Page-top bar</figcaption>
+          <app-page-top [phase]="state.phase()" [percent]="state.percent()" (cancel)="state.cancel()" />
+        </figure>
+      }
+      @if (show('stepper')) {
+        <figure>
+          <figcaption>Stage stepper</figcaption>
+          <app-stepper [phase]="state.phase()" [percent]="state.percent()" (cancel)="state.cancel()" />
+        </figure>
+      }
+    </section>
+
+    <p class="sr-only" aria-live="polite">{{ announce() }}</p>
+  }
+</main>

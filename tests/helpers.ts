@@ -42,7 +42,7 @@ export async function recordBar(page: Page) {
 export const snapshots = (page: Page) => page.evaluate(() => window.__snapshots);
 export const timeline = (page: Page) => page.evaluate(() => window.__timeline);
 
-export function phasesOf(list: Snapshot[]) {
+export function phasesOf(list: { phase: string }[]) {
   return list.map((s) => s.phase).filter((p, i, all) => p !== all[i - 1]);
 }
 
@@ -72,4 +72,50 @@ export function hex(color: string): [number, number, number] {
 
 export function near(a: [number, number, number], b: [number, number, number], tolerance = 8) {
   return a.every((v, i) => Math.abs(v - b[i]) <= tolerance);
+}
+
+export const DESIGNS = ['file-card', 'ring', 'segmented', 'button', 'page-top', 'stepper'] as const;
+
+export interface DesignSnapshot {
+  phase: string;
+  valuetext: string | null;
+}
+
+declare global {
+  interface Window {
+    __designs: Record<string, DesignSnapshot[]>;
+  }
+}
+
+/** Records each design's phase and its progressbar's aria-valuetext every time the DOM changes. */
+export async function recordDesigns(page: Page) {
+  await page.addInitScript(() => {
+    window.__designs = {};
+    new MutationObserver(() => {
+      document.querySelectorAll('[data-design]').forEach((host) => {
+        const bar = host.querySelector('progress, [role=progressbar]');
+        const s = { phase: host.getAttribute('data-phase') ?? '', valuetext: bar?.getAttribute('aria-valuetext') ?? null };
+        const list = (window.__designs[host.getAttribute('data-design')!] ??= []);
+        const last = list.at(-1);
+        if (!last || last.phase !== s.phase || last.valuetext !== s.valuetext) list.push(s);
+      });
+    }).observe(document, { subtree: true, attributes: true, childList: true, characterData: true });
+  });
+}
+
+export const designSnapshots = (page: Page, design: string) =>
+  page.evaluate((d) => window.__designs[d] ?? [], design);
+
+/** Infinite animations running inside one design (CSS animations on its elements or their pseudo-elements). */
+export function infiniteAnimations(page: Page, design: string) {
+  return page.evaluate((d) => {
+    const host = document.querySelector(`[data-design="${d}"]`)!;
+    return document
+      .getAnimations()
+      .filter((a) => a.effect!.getComputedTiming().iterations === Infinity)
+      .filter((a) => {
+        const target = (a.effect as KeyframeEffect).target;
+        return !!target && host.contains(target);
+      }).length;
+  }, design);
 }
