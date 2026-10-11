@@ -1,7 +1,7 @@
 # angular-upload-progress-bar-demo
 
-Companion to the post **"An Angular upload progress bar that shows the server is
-still working"**.
+Companion to the post
+[An Angular upload progress bar that shows the server is still working](https://gdhami.net/blog/an-angular-upload-progress-bar-that-shows-the-server-is-still-working).
 
 With `withXhr()`, Angular's `HttpClient` reports `UploadProgress` events, and the
 last one says 100% as soon as the last byte has left the browser. The server may
