@@ -1,0 +1,27 @@
+<div class="upload" [attr.data-phase]="phase()">
+  <div class="controls">
+    <input #picker type="file" aria-label="File to upload" [disabled]="busy()" />
+    <button type="button" class="send" [disabled]="busy()" (click)="picker.files?.[0] && send(picker.files[0])">
+      Upload
+    </button>
+    @if (busy()) {
+      <button type="button" class="cancel" (click)="cancel()">Cancel</button>
+    }
+  </div>
+
+  <div class="status" aria-hidden="true">
+    <span class="label">
+      @if (phase() === 'done') {
+        <svg class="icon" viewBox="0 0 16 16" width="16" height="16"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
+      } @else if (phase() === 'failed') {
+        <svg class="icon" viewBox="0 0 16 16" width="16" height="16"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+      }
+      {{ text() }}
+    </span>
+  </div>
+
+  <progress max="100" aria-label="Upload" [attr.value]="value()" [attr.aria-valuetext]="text()"></progress>
+
+  <!-- Announces phase changes only; a screen reader reading every percent is noise. -->
+  <p class="sr-only" aria-live="polite">{{ phase() === 'sending' ? 'Uploading' : phase() === 'idle' ? '' : text() }}</p>
+</div>

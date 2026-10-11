@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>progress probe</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 24px; width: 560px; }
+  progress { display: block; width: 100%; margin: 6px 0 22px; }
+  .plain { appearance: none; height: 10px; border: 0; background: #e2e8f0; }
+  .plain::-webkit-progress-bar { background: #e2e8f0; }
+  .plain::-webkit-progress-value { background: #0284c7; }
+  .plain::-moz-progress-bar { background: #0284c7; }
+</style></head>
+<body>
+  <div>1. browser default, value="64"</div><progress id="d64" max="100" value="64"></progress>
+  <div>2. browser default, no value</div><progress id="dnone" max="100"></progress>
+  <div>3. appearance: none, value="64"</div><progress id="n64" class="plain" max="100" value="64"></progress>
+  <div>4. appearance: none, no value, no :indeterminate rules</div><progress id="nnone" class="plain" max="100"></progress>
+</body></html>
